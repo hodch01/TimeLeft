@@ -1,146 +1,247 @@
-/**
-    DateCalculator Widget
-    ========================
+/*global mx, mxui, mendix, dojo, require, console, define, module */
 
-    @file      : DateCalculator.js
-    @version   : 1.0.0
-    @author    : Christopher James Hodges
-    @date      : 25-02-2015
-    @copyright : Mendix
+(function() {
+    'use strict';
 
-    Documentation
-    =============
+    // test
+    require([
 
-*/
-dojo.provide("DateCalculator.widget.DateCalculator");
+        'mxui/widget/_WidgetBase', 'mxui/mixin/_ValidationHelper', 'dijit/_Widget', 'dijit/_TemplatedMixin',
+        'mxui/dom', 'dojo/dom', 'dojo/query', 'dojo/dom-prop', 'dojo/dom-geometry', 'dojo/dom-attr', 'dojo/dom-class', 'dojo/dom-style',  'dojo/dom-construct',  'dojo/on', 'dojo/_base/lang', 'dojo/_base/declare', 'dojo/text',
+        'dojo/_base/array'
 
-mendix.widget.declare("DateCalculator.widget.DateCalculator", {
-	addons: [
-		dijit._Templated,
-		mendix.addon._Contextable
-	],
-	
-	inputargs: {
-                    maxDate: '',
-                    dateAttr: ''
-	},
-	
-	templateString :'<div class="metric-container"><div class="main-metric"><label dojoAttachPoint="metricValue"></label></div><label class="metric-unit" dojoAttachPoint="metricUnit"></label></div>',
-	_hasStarted		    : false,
+    ], function (_WidgetBase, _ValidationHelper, _Widget, _Templated, domMx, dom, domQuery, domProp, domGeom, domAttr, domClass, domStyle, domConstruct, on, lang, declare, text, array) {
 
-	startup: function () {
-        
-        if (this._hasStarted)
-            return;
-  
-        this.initContext();
-        this.actLoaded();
-    },
+        // Provide widget.
+        dojo.provide('DateCalculator.widget.DateCalculator');
 
-    update : function(obj, callback){
-        
-        this.setDataobject(obj);
-        
-        callback && callback();
-    },
-    
-    setDataobject : function(dataobject) {
+        // Declare widget.
+        return declare('DateCalculator.widget.DateCalculator', [ _WidgetBase, _ValidationHelper, _Widget, _Templated], {
 
-        var self = this;
-        var object = dataobject;
+            // Template path
+            templateString :'<div class="metric-container"><div class="main-metric"><label dojoAttachPoint="metricValue"></label></div><label class="metric-unit" dojoAttachPoint="metricUnit"></label></div>',
+	       _hasStarted		    : false,
 
-        var dateValue = object.get(self.dateAttr);
-        
-        dateValue = new Date(dateValue);
-        
-        var currentDate = new Date(); 
-        
-        self.greaterThanToday(currentDate,dateValue);
-         
-    },
-    
-    daysOrMonths : function(noOfDays){
-        
-        if (noOfDays > this.maxDate){
-                var noOfMonths = Math.floor(noOfDays/30);
-                this.metricValue.innerHTML = noOfMonths;
-                this.metricUnit.innerHTML = "months";
-            }
-        
-            else{
-                this.metricValue.innerHTML = noOfDays;
-                if (noOfDays == 1)
-                {
-                    this.metricUnit.innerHTML = "day";
+            /**
+             * Mendix Widget methods.
+             * ======================
+             */
+
+            // DOJO.WidgetBase -> PostCreate is fired after the properties of the widget are set.
+            postCreate: function () {
+
+                // Load CSS ... automaticly from ui directory
+
+                // Setup widgets
+                this._setupWidget();
+
+                // Setup events
+                this._setupEvents();
+
+            },
+
+            // DOJO.WidgetBase -> Startup is fired after the properties of the widget are set.
+            startup: function () {
+
+            },
+
+            /**
+             * What to do when data is loaded?
+             */
+
+            update: function (obj, callback) {
+
+                this.removeError();
+
+                if(this.handles){
+                    array.forEach(this.handles, function (handle, i) {
+                        mx.data.unsubscribe(handle);
+                    });
                 }
-                else{
+                //load embedded
+                var loaded = false;
+                var errorhandled = false;
+
+                if (obj) {
+
+                    this.mendixobject = obj;
+                    try {
+                        if (this.dateAttr !== '') {
+                            
+                            this._setupDateCalculator(obj);
+                            loaded = true;
+                            
+                        }
+                    }
+                    catch (err) {
+                        console.error(this.id +'.update: error while loading attr ' + err);
+                        loaded = false;
+                    }
+
+                    var validationhandle = mx.data.subscribe({
+                        guid     : obj.getGuid(),
+                        val      : true,
+                        callback : lang.hitch(this,function(validations) {
+                            var val = validations[0],
+                            msg = val.getReasonByAttribute(this.dateAttr);                                  
+                            if (msg) {
+                                this.addError(msg);
+                                val.removeAttribute(this.dateAttr);
+                            }
+                        })
+                    });
+
+                    var refreshhandle = mx.data.subscribe({
+                        guid     : obj.getGuid(),
+                        callback : lang.hitch(this, function(guid) {
+                            this.update(obj, callback);
+                        })
+                    });
+
+                    var refreshAttHandle = mx.data.subscribe({
+                        guid    : obj.getGuid(),
+                        attr    : this.dateAttr,
+                        callback : lang.hitch(this, function(guid) {
+                            this.update(obj, callback);
+                        })
+                    });
+
+                    this.handles = [validationhandle, refreshhandle, refreshAttHandle];
+
+                } else {
+                    console.log(this.id + '.update: received null object');
+                }
+
+                // Execute callback.
+                if(typeof callback !== 'undefined'){
+                    callback();
+                }
+            },
+            
+            //summary : stub function, will be used or replaced by the client environment
+            onChange : function(){
+                
+                this.removeError();
+            },
+            
+            uninitialize : function(){
+                
+                if(this.handles){
+                    array.forEach(this.handles, function (handle, i) {
+                        mx.data.unsubscribe(handle);
+                    });
+                }
+            },
+
+
+            /**
+             * Extra setup widget methods.
+             * ======================
+             */
+            _setupWidget: function () {
+
+                this.mendixobject = null;
+                this.handles = null;
+                this.metricValue.innerHTML = "";
+                this.metricUnit.innerHTML = "";
+
+            },
+
+
+            // Attach events to newly created nodes.
+            _setupEvents: function () {
+
+                console.log('DateCalculator - setup events');
+                
+            },
+
+
+            /**
+             * Interaction widget methods.
+             * ======================
+             */
+            
+            _setupDateCalculator : function(obj){
+                
+                var dateValue;
+                
+                //Get the date attribute
+                dateValue = obj.get(this.dateAttr);
+                dateValue = new Date(dateValue);
+                
+                //Get today's date            
+                var currentDate = new Date();
+                
+                //Set time to 00:00:00
+                currentDate.setHours(0,0,0,0);
+                dateValue.setHours(0,0,0,0);
+                
+                //Initiate Date Calculator
+                this._initDateCalculator(currentDate, dateValue);
+                
+            },
+            
+            _initDateCalculator : function(currentDate, dateVariable){
+                
+                // Is the date in the future
+                if (currentDate < dateVariable){
+            
+                    var noOfDays = Math.round(this._dayDiff(currentDate,dateVariable));
+                    this._daysOrMonths(noOfDays);
+            
+                }
+                
+                //Is the date today
+                else if (this._datesEqual(currentDate, dateVariable)){
+            
+                    this.metricValue.innerHTML = "0";
                     this.metricUnit.innerHTML = "days";
+            
                 }
-            }
-    },
-    
-    greaterThanToday : function(currentDate, variableDate){
-        
-        if (currentDate < variableDate){
+                
+                //Is the date in the past
+                else{
             
-            var noOfDays = Math.round(this.dayDiff(currentDate,variableDate));
-            this.daysOrMonths(noOfDays);
-            
-        }
-        else{
-            
-            this.metricValue.innerHTML = "-";
-            this.metricUnit.innerHTML = "days";
-        }
-    },
-    
-    dayDiff : function(currentDate, variableDate){
+                    this.metricValue.innerHTML = this.expiredMsg;
+                    this.metricUnit.innerHTML = this.expiredMetric;
+                }
+            },
+
+            _dayDiff : function(currentDate, variableDate) {
+
+                var oneDay = 24*60*60*1000;	// hours*minutes*seconds*milliseconds
+                var diffDays = Math.abs((currentDate.getTime() - variableDate.getTime())/(oneDay));
         
-        var oneDay = 24*60*60*1000;	// hours*minutes*seconds*milliseconds
-        var diffDays = Math.abs((currentDate.getTime() - variableDate.getTime())/(oneDay));
-        
-        return diffDays;
-        
-    },
-
-    applyContext : function(context, callback){
-        logger.debug(this.id + ".applyContext");
-        
-        if (context) {
-            mx.processor.getObject(context.getActiveGUID(), dojo.hitch(this, this.setDataobject));        
+                return diffDays;
+            },
             
-        } else
-            logger.warn(this.id + ".applyContext received empty context");
-
-        if (context && !!context.getTrackId()) {
-            var obj =  context.getTrackObject();
+            _datesEqual : function(dateA, dateB){
+                return this._dayDiff(dateA, dateB) == 0;
+            },
             
-            if (obj != null){
-                this.setDataobject(obj);
-            }
-            else {
-                mx.processor.get({
-                    guid : context.getTrackID(),
-                    callback : this.setDataobject
-                }, this);
-                mx.data.subscribe({
-                        guid    :  context.getTrackID(),
-                        callback : dojo.hitch(this, this.setDataobjectGUID)
-                });
-            }
-        }
-        callback && callback();
-    },
+            _daysOrMonths : function(noOfDays){
+        
+                if (noOfDays > this.maxDate){
+                    
+                    var noOfMonths = Math.floor(noOfDays/30);
+                    this.metricValue.innerHTML = noOfMonths;
+                    this.metricUnit.innerHTML = "months";
+                }
+        
+                else{
+                    this.metricValue.innerHTML = noOfDays;
+                    
+                    if (noOfDays == 1)
+                    {
+                        this.metricUnit.innerHTML = "day";
+                    }
+                    else{
+                        this.metricUnit.innerHTML = "days";
+                    }
+                }
+            },
 
-    setDataobjectGUID :function(objID){
-            mx.processor.get({
-                    guid : objID,
-                    callback : this.setDataobject
-                }, this);
-    },
+        });
+    });
 
-
-	uninitialize : function() {
-		
-	},
-});
+}());

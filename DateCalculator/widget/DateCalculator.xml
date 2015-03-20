@@ -18,5 +18,15 @@
       <category>Data source</category>
       <description>The max date value</description> 
     </property>
+    <property key="expiredMsg" type="string" required="true" defaultValue="-">
+        <caption>Expired Message</caption>
+      <category>Data source</category>
+      <description>The message/value for expired quotes</description> 
+    </property>
+    <property key="expiredMetric" type="string" required="true" defaultValue="days">
+        <caption>Expired Metric</caption>
+      <category>Data source</category>
+      <description>The message/value for the expired quotes metric</description> 
+    </property>  
   </properties>
 </widget>
