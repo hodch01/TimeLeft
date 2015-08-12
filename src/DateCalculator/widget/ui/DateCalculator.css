@@ -1,40 +1,37 @@
-.main-metric {
-	font-family: 'gotham-book', Arial, Helvetica, sans-serif;
-	color: #004B96;
+.metric-container{
+    height: 52px;
+    background-color: #F9f9f9;
+    width: 64px;
+    border: 1px solid #d1e2e7;
+    display: block;
 }
 
-.metric-box .main-metric {
-	text-align: center;
-	font-size: 2.66666666666667em; /* 32pt */
-	line-height: 1.2em;
-	
-	display: block;
-	width: 100%;
+.main-metric{
+    text-align: center;
+    font-size: 2.66666666666667em;
+    line-height: 1.2em;
+    display: block;
+    width: 100%;
+    font-family: 'gotham-book', Arial, Helvetica, sans-serif;
+    color: #004B96;
 }
 
-.metric-box .main-metric > label {
-	padding-top: 0;
+.main-metric label{
+
+    padding-top:0;
 }
 
-.metric-box > .metric-box-label {
-	text-align: center;
-	display: block;
-	padding-top: 0;
-	
-	position: absolute;
-	width: 100%;
+label.metric-unit{
+    text-align: center;
+    line-height: 1em;
+    font-size: 1em;
+    width: 100%;
+    display: block;
+    position: relative;
+    text-transform: capitalize;
+    padding-top: 0;
+    top: -6px;
 }
 
-.metric-box .metric-unit{
 
-	text-align: center;
-	line-height: 1em;
-	font-size: 1em;
-	
-	width: 100%;
-	display: block;
-	
-	position: relative;
-	top: -6px;
-	text-transform: capitalize;
-}
+
