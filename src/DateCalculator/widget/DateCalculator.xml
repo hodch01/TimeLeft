@@ -21,12 +21,22 @@
     <property key="expiredMsg" type="string" required="true" defaultValue="-">
         <caption>Expired Message</caption>
       <category>Data source</category>
-      <description>The message/value for expired quotes</description> 
+      <description>The message/value for expired dates</description> 
     </property>
     <property key="expiredMetric" type="string" required="true" defaultValue="days">
         <caption>Expired Metric</caption>
       <category>Data source</category>
-      <description>The message/value for the expired quotes metric</description> 
+      <description>The message/value for the expired dates metric</description> 
+    </property>
+    <property key="invalidMsg" type="string" required="true" defaultValue="-">
+        <caption>Invalid Message</caption>
+      <category>Data source</category>
+      <description>The message/value for invalid dates</description> 
+    </property>
+    <property key="invalidMetric" type="string" required="true" defaultValue="days">
+        <caption>Invalid Metric</caption>
+      <category>Data source</category>
+      <description>The message/value for the invalid dates metric</description> 
     </property>  
   </properties>
 </widget>

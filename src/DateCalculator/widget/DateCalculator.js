@@ -50,7 +50,9 @@
              */
 
             update: function (obj, callback) {
-
+                
+                this.metricValue.innerHTML = this.invalidMsg;
+                this.metricUnit.innerHTML = this.invalidMetric;
                 this.removeError();
 
                 if(this.handles){
@@ -168,16 +170,25 @@
                 //Get the date attribute
                 dateValue = obj.get(this.dateAttr);
                 dateValue = new Date(dateValue);
+                if(!Date.parse(dateValue)){
+                    
+                    this.metricValue.innerHTML = this.invalidMsg;
+                    this.metricUnit.innerHTML = this.invalidMetric;
+                }
                 
-                //Get today's date            
-                var currentDate = new Date();
+                else{
+                    
+                    //Get today's date            
+                    var currentDate = new Date();
                 
-                //Set time to 00:00:00
-                currentDate.setHours(0,0,0,0);
-                dateValue.setHours(0,0,0,0);
+                    //Set time to 00:00:00
+                    currentDate.setHours(0,0,0,0);
+                    dateValue.setHours(0,0,0,0);
                 
-                //Initiate Date Calculator
-                this._initDateCalculator(currentDate, dateValue);
+                    //Initiate Date Calculator
+                    this._initDateCalculator(currentDate, dateValue);
+                }
+                
                 
             },
             
